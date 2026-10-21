@@ -1,0 +1,30 @@
+/* ZUZ - Tutorial guiado, PWA, navegação para telas sensíveis ao toque */
+.mobile-dock,.mobile-menu{display:none}
+.mobile-menu[hidden]{display:none!important}
+#tourRoot{position:relative;z-index:100}
+.tour-panel{position:fixed;right:20px;bottom:20px;width:min(425px,calc(100vw - 34px));border-radius:20px;border:1px solid #a38ad0;background:linear-gradient(140deg,#26203f,#161a30);color:#f8f3ff;box-shadow:0 18px 90px #050418d6;z-index:110;padding:20px;max-height:min(80dvh,550px);overflow-y:auto;overscroll-behavior:contain}
+.tour-top{display:flex;justify-content:space-between;align-items:center;gap:9px}.tour-eyebrow{font-size:10px;font-weight:900;letter-spacing:1.1px;color:#c3a7ff}.tour-dismiss{border:1px solid #64547d;background:#352c51;border-radius:9px;color:#e3d7f7;height:32px;width:32px;flex:none;font-size:16px}.tour-meter{height:5px;background:#4c415f;border-radius:10px;overflow:hidden;margin:12px 0 15px}.tour-meter span{height:100%;display:block;background:linear-gradient(90deg,#b58cff,#6bdeb4);transition:width .2s ease}.tour-panel h2{font-size:22px;letter-spacing:-.5px;line-height:1.2;margin:0 0 10px}.tour-instruction{font-size:13px;line-height:1.55;color:#f3ebff;margin-bottom:12px}.tour-insight{font-size:11px;line-height:1.55;color:#b9b8d5;background:#201e35;border:1px solid #44405c;border-radius:11px;padding:11px;margin:0 0 16px}.tour-insight strong{color:#e8d9ff}.tour-buttons{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:7px}.tour-btn{border:1px solid #5c5073;min-height:40px;border-radius:9px;color:#ddd1f4;background:#362c4c;font-weight:800;font-size:11px}.tour-btn:disabled{opacity:.35}.tour-forward{background:#8c64ea;border-color:#b99aff;color:white}.tour-try{background:#24443f;border-color:#397366;color:#c1f6e1}.tour-resume{position:fixed;bottom:25px;right:20px;border:1px solid #aa85f4;color:white;border-radius:16px;background:linear-gradient(115deg,#7351b9,#452d78);box-shadow:0 10px 30px #05041a90;padding:14px 18px;font-weight:900;font-size:12px;z-index:110;display:flex;align-items:center;gap:9px}.nav-link.tour-focus{outline:2px solid #ae8cf9;outline-offset:1px}
+button{touch-action:manipulation}
+@media(max-width:800px){
+  html{scroll-padding-bottom:110px}body{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+  .sidebar{display:none!important}.app-shell{display:block!important}.topbar{height:49px}.main-area{min-height:100vh}
+  .page-root{padding:16px 12px 24px!important}.mobile-brand{padding:10px 14px 4px}
+  .mobile-dock{position:fixed;z-index:80;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:#16162beF;border-top:1px solid #645077;box-shadow:0 -10px 40px #0a091d66;padding:5px 6px calc(5px + env(safe-area-inset-bottom));backdrop-filter:blur(15px)}
+  .mobile-dock button{border:1px solid transparent;border-radius:10px;background:transparent;color:#aeb0c9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:48px;min-width:0;padding:5px 0}.mobile-dock button.active{background:#413365;border-color:#7860ae;color:#fff}
+  .mobile-dock button span{font-size:20px;line-height:1}.mobile-dock small{font-size:10px;font-weight:800;line-height:1.2}
+  .mobile-menu{display:block;position:fixed;inset:0;z-index:130}.mobile-menu-shade{position:absolute;inset:0;width:100%;height:100%;border:0;background:#060713aa}.mobile-menu-sheet{position:absolute;bottom:0;left:0;right:0;background:#1b1c32;border-radius:22px 22px 0 0;border-top:1px solid #70618f;box-shadow:0 -20px 80px #08071a;padding:16px 16px calc(22px + env(safe-area-inset-bottom));max-height:89dvh;overflow-y:auto}
+  .mobile-menu-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.mobile-menu-head strong{font-size:18px}.mobile-menu-head button{width:36px;height:36px;border-radius:10px;background:#393153;color:#f4efff;border:1px solid #766391;font-size:18px}
+  .mobile-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mobile-menu-grid button{border-radius:12px;background:#2a2b42;color:#e3def5;border:1px solid #4d4b67;min-height:51px;text-align:left;font-size:12px;font-weight:800;padding:11px;line-height:1.4}.mobile-menu-grid button.active{background:#433263;border-color:#a987ee}
+  .tour-panel{bottom:calc(67px + env(safe-area-inset-bottom));left:10px;right:10px;width:auto;padding:16px;border-radius:16px;max-height:54dvh}.tour-panel h2{font-size:18px}.tour-instruction{font-size:12px}.tour-insight{font-size:10px;padding:8px;margin-bottom:10px}.tour-resume{bottom:calc(70px + env(safe-area-inset-bottom));right:12px}.tour-btn{font-size:10px;padding:4px 3px}
+  .page-heading,.page-heading>div{max-width:100%;min-width:0}.section-title{overflow-wrap:anywhere}
+  .product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.product-card{min-width:0}
+  input,select,textarea{font-size:16px!important}
+  .history-table-wrap,.chart-area{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}.result-dialog{padding:17px}.result-table{min-width:480px}.result-dialog{max-width:96vw}.result-stats{gap:5px}.result-stat{padding:9px 5px}.result-stat b{font-size:12px}
+  .overlay{padding:10px;align-items:center}.dialog{max-width:100%;max-height:91dvh;overflow-y:auto}.challenge-dialog{width:100%}.challenge-dialog h2{padding-right:18px}
+  .store-stage{max-width:100%}.scene-event{max-width:70%}.site-footer{padding:12px 14px}
+}
+@media(max-width:380px){
+  .mobile-dock small{font-size:9px}.product-grid{grid-template-columns:1fr!important}
+  .tour-panel{max-height:53dvh}.tour-panel h2{font-size:17px}.tour-instruction{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){.tour-meter span{transition:none}}

@@ -1,0 +1,13 @@
+const CACHE_NAME = 'zuz-cidade-preco-v6';
+const OFFLINE_FILES = ['./','./index.html','./styles.css','./city.css','./sales.css','./expansion.css','./features.css','./mobile.css','./game.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./tema_fim_de_tarde.mp3'];
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(OFFLINE_FILES)).then(()=>self.skipWaiting()));
+});
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));
+});
+self.addEventListener('fetch', event => {
+  const request=event.request;
+  if(request.method!=='GET'||new URL(request.url).origin!==self.location.origin)return;
+  event.respondWith(caches.match(request).then(hit=>hit||fetch(request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));}return response;})));
+});
