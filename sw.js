@@ -1,5 +1,5 @@
-const CACHE_NAME = 'zuz-cidade-preco-v6';
-const OFFLINE_FILES = ['./','./index.html','./styles.css','./city.css','./sales.css','./expansion.css','./features.css','./mobile.css','./game.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./tema_fim_de_tarde.mp3'];
+const CACHE_NAME = 'zuz-cidade-preco-interativo-v8';
+const OFFLINE_FILES = ['./','./index.html','./styles.css','./city.css','./sales.css','./expansion.css','./features.css','./mobile.css','./interactive.css','./game.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./tema_fim_de_tarde.mp3'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(OFFLINE_FILES)).then(()=>self.skipWaiting()));
 });
