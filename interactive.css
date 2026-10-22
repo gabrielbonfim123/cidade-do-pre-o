@@ -1,0 +1,55 @@
+/* ZUZ - Cidade do Preco | loja interativa */
+.topbar-quick{display:flex;align-items:center;justify-content:flex-end}
+.fast-day-button{border:1px solid #8268c4;background:#3a2b61;color:#fff;font:800 11px system-ui;padding:9px 12px;border-radius:10px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 16px #08071255}
+.fast-day-button:hover{background:#4d3782}.fast-day-button.next{background:#235f4a;border-color:#69c8a0}
+.shop-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}.shop-toolbar .period-select{margin:0}
+.interactive-shop{--wall:#4f3c6a;--wall2:#322b55;position:relative;width:100%;height:clamp(430px,52vw,570px);overflow:hidden;border:2px solid #6c568d;border-radius:21px;background:linear-gradient(180deg,#29253f 0%,#242139 62%,#403451 62%,#241f35 100%);box-shadow:inset 0 0 0 5px #131125,0 16px 38px #09081675;isolation:isolate}
+.interactive-shop.period-manha{--wall:#77618f;--wall2:#52476b;background:linear-gradient(180deg,#51456b,#75617f 61%,#6f5473 61%,#43314f)}
+.interactive-shop.period-tarde{--wall:#604569;--wall2:#3b335b;background:linear-gradient(180deg,#4c385f,#684560 61%,#695271 61%,#332840)}
+.interactive-shop.period-noite{--wall:#323258;--wall2:#232444;background:linear-gradient(180deg,#262642,#3b365d 61%,#514268 61%,#292341)}
+.shop-wall{position:absolute;inset:15% 0 37%;background:repeating-linear-gradient(90deg,transparent 0 83px,#ffffff05 84px 86px),linear-gradient(180deg,var(--wall),var(--wall2));border-bottom:11px solid #b898ab}
+.shop-wallstripe{position:absolute;left:0;right:0;top:60%;height:8px;background:#32233c;box-shadow:0 7px #bfaac055}
+.shop-floor{position:absolute;left:0;right:0;bottom:0;height:36%;pointer-events:none;background:repeating-linear-gradient(100deg,#0000 0 58px,#ffffff10 60px 61px),repeating-linear-gradient(0deg,#765974 0 63px,#4b3753 64px 66px);z-index:0}
+.shop-sky{position:absolute;top:9%;right:6%;width:16%;height:23%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;background:linear-gradient(140deg,#b8d2f8,#e1b8e7);border:8px solid #decdd5;box-shadow:inset 0 0 0 3px #846c90,0 5px 0 #1b1628;z-index:2;font-size:32px}
+.period-noite .shop-sky{background:linear-gradient(140deg,#182549,#424a83)}.period-manha .shop-sky{background:linear-gradient(140deg,#b1def1,#f3ddb4)}
+.shop-sky small{font-size:10px;font-weight:900;color:#43344f}
+.shop-sign{position:absolute;top:4%;left:5%;max-width:66%;z-index:3;color:#fdf2df;text-shadow:2px 3px #513e58;text-transform:uppercase;letter-spacing:2px;font-size:clamp(12px,1.75vw,22px);font-weight:1000;display:flex;align-items:center;gap:12px}.shop-sign span{color:#f4c888}
+.shop-object{position:absolute;border:3px solid #3a2a4f;border-bottom-width:8px;border-radius:12px 12px 6px 6px;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 4px;min-height:72px;cursor:pointer;color:#fff;background:linear-gradient(145deg,#a77d9b,#655074);box-shadow:inset 0 0 0 2px #ffffff25,0 8px 0 #1f1829,0 12px 22px #0b0a165e;transition:transform .16s,filter .16s,box-shadow .16s}
+.shop-object:hover,.shop-object:focus-visible{transform:translateY(-5px) scale(1.025);filter:brightness(1.18);box-shadow:0 10px 0 #1f1829,0 15px 28px #100a2685;outline:2px solid #e7cfff;outline-offset:2px}
+.shop-object b{font-size:clamp(9px,1.15vw,13px);font-weight:950;letter-spacing:.55px;text-shadow:0 2px #4b3254}.shop-object small{font-size:clamp(8px,.85vw,10px);font-weight:700;color:#f6defd}
+.shop-sprite{font-size:clamp(21px,2.8vw,37px);line-height:1.15;white-space:nowrap;filter:drop-shadow(1px 3px #382445)}
+.object-shelf{left:7%;top:27%;width:26%;height:27%;background:linear-gradient(145deg,#a78977,#74536c)}
+.object-kitchen{left:39%;top:27%;width:22%;height:24%;background:linear-gradient(145deg,#7695ab,#55617e)}
+.object-decor{left:65%;top:35%;width:22%;height:19%;background:linear-gradient(145deg,#6c987f,#496675)}
+.object-counter{left:18%;top:68%;width:23%;height:20%;background:linear-gradient(145deg,#c5917a,#a0637b)}
+.object-register{left:48%;top:66%;width:18%;height:20%;background:linear-gradient(145deg,#9895b4,#60597f)}
+.object-storage{right:6%;top:69%;width:20%;height:18%;background:linear-gradient(145deg,#978461,#6b5972)}
+.object-door{right:3%;top:11%;width:11%;height:20%;min-height:56px;background:linear-gradient(145deg,#8570a5,#4b4773)}
+.object-door small{display:none}.object-door .shop-sprite{font-size:30px}
+.shop-person,.shop-visitors{position:absolute;z-index:4;font-size:27px;filter:drop-shadow(2px 3px #231c32);bottom:13%;pointer-events:none}.shop-person{left:9%}.shop-visitors{left:70%}
+.shop-layout-1 .object-shelf{left:41%;top:28%}.shop-layout-1 .object-kitchen{left:8%;top:26%}.shop-layout-1 .object-counter{left:51%;top:66%}.shop-layout-1 .object-register{left:24%;top:68%}.shop-layout-1 .object-decor{left:68%;top:36%}
+.shop-layout-2 .object-kitchen{left:62%;top:30%}.shop-layout-2 .object-shelf{left:11%;top:29%}.shop-layout-2 .object-decor{left:40%;top:32%}.shop-layout-2 .object-counter{left:42%;top:69%}.shop-layout-2 .object-register{left:18%;top:69%}
+.shop-helper{border:1px solid #594f78;background:linear-gradient(90deg,#302848,#1f1b33);padding:14px 18px;color:#d4cce9;font-size:12px;line-height:1.7;border-radius:12px;margin-top:15px}.shop-helper strong{color:#cfbaff}
+.shop-bottom-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.shop-mini-card{background:#25243b;border:1px solid #484366;border-radius:13px;padding:17px;display:flex;flex-direction:column;gap:6px}
+.shop-mini-card small{font-size:10px;letter-spacing:1px;font-weight:900;color:#aeb0cb}.shop-mini-card strong{font-size:25px;letter-spacing:-1px;color:#f8eefb}.shop-mini-card span{font-size:11px;color:#ada9c3}
+.shop-action-row,.sales-fast-row{display:flex;gap:10px;flex-wrap:wrap;margin:17px 0 18px}.shop-action-row .btn,.sales-fast-row .btn{min-height:42px}
+.learn-panel{background:linear-gradient(145deg,#292440,#1e1c32);border:1px solid #665182;border-radius:17px;padding:20px;margin:20px 0 26px;color:#e9e0fb}
+.learn-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.learn-kicker{font-size:10px;color:#c3acee;font-weight:900;letter-spacing:1.5px}.learn-panel h3{font-size:21px;margin:4px 0 15px}.learn-panel-head>strong{font-size:20px;color:#f9e5ab}
+.learn-meter{height:8px;background:#463957;border-radius:10px;overflow:hidden;margin-bottom:15px}.learn-meter span{display:block;height:100%;background:linear-gradient(90deg,#876ce0,#67c6b1);border-radius:10px;transition:width .25s}
+.learn-missions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:15px}
+.learn-mission{display:flex;align-items:center;gap:10px;border:1px solid #413753;background:#211e31;border-radius:9px;padding:12px 10px;min-width:0}
+.learn-mission>b{font-size:20px;color:#a795d6}.learn-mission.done>b{color:#69d6af}.learn-mission.done{border-color:#3c7a66;background:#21362e}
+.learn-mission span{display:flex;flex-direction:column;gap:4px;min-width:0}.learn-mission strong{font-size:12px;color:#f0e6ff}.learn-mission small{font-size:10px;color:#aaa4c1;line-height:1.4}.learn-panel>.btn{font-size:11px}
+.shop-dialog{min-width:min(600px,90vw);max-width:640px;color:#ede6fa;display:flex;flex-direction:column;align-items:stretch;gap:14px;padding:3px 4px}
+.shop-dialog h2{font-size:clamp(25px,3vw,32px);margin:0;color:#fff}.shop-dialog>p{font-size:13px;line-height:1.6;color:#c5bedb;margin:0}.shop-dialog .eyebrow{color:#b99bf2}.shop-dialog>.btn{align-self:stretch}
+.shop-products{display:flex;flex-direction:column;gap:8px;margin:6px 0}.shop-products>div{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #4c4163;padding:10px 12px;border-radius:10px;background:#26213b}
+.shop-products span{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800}.shop-products span small{font-size:10px;font-weight:500;color:#bab1d2}.shop-products strong{font-size:14px;color:#f9e9c2}
+.shop-products button,.shop-answer-list button{background:#3e315d;color:#fff;border:1px solid #8566c1;padding:10px 14px;border-radius:9px;cursor:pointer;font-size:12px;font-weight:900}
+.shop-products button:hover,.shop-answer-list button:hover{background:#5e4387}.shop-products button:disabled{opacity:.55;cursor:not-allowed}.shop-answer-list{display:flex;flex-direction:column;gap:8px;margin:10px 0}.shop-answer-list button{text-align:left;min-height:46px}
+.quick-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.quick-summary div{border:1px solid #514566;background:#25213a;border-radius:12px;padding:13px 10px;display:flex;flex-direction:column;gap:7px}.quick-summary span{font-size:10px;color:#c0b7db}.quick-summary b{font-size:17px;color:#fff}
+.client-small-tip{display:inline-block;margin:8px 0 0;padding:7px 10px;border-radius:7px;background:#3b305a;border:1px solid #856cac;color:#efe6ff;font-size:10px;cursor:pointer}
+.shop-reviews{margin:14px 0;padding:13px;border:1px solid #4f4770;background:#24203c;border-radius:12px;font-size:12px}.shop-reviews strong{color:#d4bbff}.shop-reviews p{margin:8px 0;color:#d7d0e7}
+@media(max-width:1000px){.interactive-shop{height:510px}.fast-day-button{font-size:10px;padding:7px 9px}.shop-sprite{font-size:27px}}
+@media(max-width:700px){.interactive-shop{height:430px;border-radius:13px}.shop-object{border-width:2px;border-bottom-width:5px;border-radius:8px;gap:3px;padding:5px 3px;min-height:56px}.shop-object b{font-size:9px}.shop-object small{font-size:8px}.shop-sprite{font-size:20px}.object-shelf{width:29%;left:5%;top:30%}.object-kitchen{width:23%;left:40%}.object-counter{left:11%;width:30%}.object-register{left:45%;width:23%}.object-storage{right:3%;width:24%}.object-decor{right:2%;width:27%;left:auto}.object-door{right:2%;width:15%}.shop-person,.shop-visitors{font-size:18px}.shop-sign{font-size:12px}.shop-sky{right:8%;top:8%;width:18%;height:20%;font-size:19px;border-width:4px}.shop-bottom-grid{grid-template-columns:1fr 1fr}.shop-mini-card:last-child{grid-column:span 2}.learn-missions{grid-template-columns:1fr}.quick-summary{grid-template-columns:1fr 1fr}.quick-summary div:last-child{grid-column:span 2}.topbar-quick{display:none}.shop-dialog{min-width:0}.shop-action-row>.btn,.sales-fast-row>.btn{width:100%;justify-content:center}}
+@media(max-width:420px){.interactive-shop{height:365px}.shop-object small{display:none}.shop-sprite{font-size:19px}.shop-object b{font-size:8px}.shop-floor{height:39%}.shop-sign{letter-spacing:0}.shop-action-row>.btn{font-size:11px;padding:10px}}
