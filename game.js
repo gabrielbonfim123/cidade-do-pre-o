@@ -106,6 +106,119 @@
     ]}
   ];
 
+  // Novos conteudos: nenhuma dependencia adicional ou alteracao nas chaves do save.
+  const DECOR_ITEMS = [
+    {id:'plants',emoji:'🪴',name:'Plantas acolhedoras',price:110,desc:'Um cantinho verde para seus clientes.'},
+    {id:'lights',emoji:'✨',name:'Luzes aconchegantes',price:170,desc:'Iluminacao especial para o fim da tarde.'},
+    {id:'table',emoji:'🪑',name:'Mesinha para clientes',price:240,desc:'Mais conforto dentro da loja.'}
+  ];
+  const TUTORIAL_MISSIONS = [
+    {id:'visit',title:'Entre na sua loja',desc:'Abra Interior da loja no menu lateral.'},
+    {id:'shelf',title:'Conheca a vitrine',desc:'Clique na prateleira e veja os produtos.'},
+    {id:'kitchen',title:'Prepare um pedido',desc:'Resolva o desafio simples da cozinha.'},
+    {id:'layout',title:'Organize o ambiente',desc:'Mude a disposicao dos moveis.'},
+    {id:'customer',title:'Atenda um cliente',desc:'Escolha o produto correto no balcao.'},
+    {id:'close',title:'Feche seu primeiro dia',desc:'Use Encerrar expediente e confira o lucro.'}
+  ];
+  const CLIENT_PEOPLE = [
+    {name:'Lia',style:'economico',shirt:'#f0b666',skin:'#c48a69',hair:'#392c38',avatar:'🛍️',intro:'Estou comparando precos pelo bairro.',thanks:'Otimo! Este preco cabe no meu bolso.'},
+    {name:'Marcos',style:'trabalhadores',shirt:'#8bc9c7',skin:'#ce977a',hair:'#302a40',avatar:'☕',intro:'Tenho pouco tempo para o intervalo!',thanks:'Perfeito, atendimento rapidinho!'},
+    {name:'Bia',style:'curiosos',shirt:'#d1a1ef',skin:'#ad755d',hair:'#5a353b',avatar:'⭐',intro:'Adoro experimentar novidades.',thanks:'Adorei conhecer este produto!'},
+    {name:'Dona Rosa',style:'familias',shirt:'#e4a3bd',skin:'#c78c6a',hair:'#5c4754',avatar:'🍪',intro:'Quero levar algo gostoso para a familia.',thanks:'Vou recomendar a loja para todo mundo.'},
+    {name:'Theo',style:'exigente',shirt:'#a7b6ef',skin:'#d7a17b',hair:'#39354e',avatar:'🔎',intro:'Gosto de qualidade e atendimento caprichado.',thanks:'Gostei do cuidado no atendimento.'},
+    {name:'Nina',style:'fiel',shirt:'#e4bb8e',skin:'#9b6455',hair:'#29243d',avatar:'💜',intro:'Sempre passo aqui quando posso.',thanks:'Sabia que podia confiar nesta loja!'}
+  ];
+  function clientForStep(step=cityProgress().deliveryStep){return CLIENT_PEOPLE[((state.day-1)*2+step)%CLIENT_PEOPLE.length]}
+  function completedTutorialTasks(){return TUTORIAL_MISSIONS.filter(t=>state.tutorialTasks?.[t.id]).length}
+  function markTutorialTask(id){
+    if(!state.started||state.tutorialTasks?.[id]||!TUTORIAL_MISSIONS.some(x=>x.id===id))return;
+    state.tutorialTasks=state.tutorialTasks||{};state.tutorialTasks[id]=true;save();
+    if(completedTutorialTasks()===TUTORIAL_MISSIONS.length)toast('ZUNI: todas as missoes praticas foram concluidas!');
+  }
+  function tutorialMissionPanel(){
+    const total=completedTutorialTasks();
+    return `<section class="learn-panel"><div class="learn-panel-head"><div><span class="learn-kicker">ZUNI · APRENDA FAZENDO</span><h3>Missoes praticas do tutorial</h3></div><strong>${total}/${TUTORIAL_MISSIONS.length}</strong></div><div class="learn-meter"><span style="width:${100*total/TUTORIAL_MISSIONS.length}%"></span></div><div class="learn-missions">${TUTORIAL_MISSIONS.map(t=>`<div class="learn-mission ${state.tutorialTasks?.[t.id]?'done':''}"><b>${state.tutorialTasks?.[t.id]?'✓':'○'}</b><span><strong>${t.title}</strong><small>${t.desc}</small></span></div>`).join('')}</div><button class="btn btn-secondary" data-action="tutorial">Abrir tutorial guiado (${TOUR_STEPS.length} etapas) →</button></section>`;
+  }
+  function fastDayControl(){
+    if(!state.started)return '';
+    if(state.finished)return `<button class="fast-day-button" data-action="report">📊 Balanco final</button>`;
+    if(state.pendingNext)return `<button class="fast-day-button next" data-action="next">🌅 Proximo dia →</button>`;
+    return `<button class="fast-day-button" data-action="quick-close">🌙 Encerrar expediente</button>`;
+  }
+  function decoratePurchase(id){
+    if(!editableDay()){toast('A decoracao pode ser comprada antes de fechar o dia.');return;}
+    const deco=DECOR_ITEMS.find(d=>d.id===id);
+    if(!deco||state.decor.includes(id))return;
+    if(state.cash<deco.price){toast(`Dinheiro insuficiente para ${deco.name}.`);return;}
+    state.cash=Math.round((state.cash-deco.price)*100)/100;
+    state.decor.push(id);
+    state.investments.push({day:state.day,id:`decor_${id}`,type:'decor',name:deco.name,cost:deco.price});
+    save();hideOverlay();render();sound('cash');toast(`${deco.emoji} ${deco.name} instalado na loja!`);
+  }
+  function shopDialog(type){
+    const page=type==='counter'?'vendas':type==='storage'?'estoque':null;
+    if(page){currentPage=page;render();return;}
+    if(type==='register'){quickClose();return;}
+    if(type==='door'){quickClose();return;}
+    if(type==='shelf'){
+      markTutorialTask('shelf');
+      const items=activeIndexes();
+      showOverlay(`<div class="shop-dialog"><div class="eyebrow">VITRINE DA LOJA</div><h2>Seus produtos a venda</h2><p>Os precos sao os mesmos definidos em Meu negocio.</p><div class="shop-products">${items.map(k=>`<div><span>${PRODUCTS[k].category==='Bebida'||PRODUCTS[k].id==='coffee'?'☕':'🍰'} ${esc(PRODUCTS[k].name)}</span><strong>${money(state.prices[k])}</strong></div>`).join('')}</div><button class="btn btn-primary" data-action="goto-game">Editar precos →</button><button class="btn btn-secondary" data-action="close">Voltar a loja</button></div>`);
+      return;
+    }
+    if(type==='kitchen'){
+      if(!editableDay()){toast('A cozinha reabre no proximo dia.');return;}
+      const cp=cityProgress();
+      if(cp.prepared){toast('Voce ja fez o desafio da cozinha hoje!');return;}
+      const k=todayOrder();const p=PRODUCTS[k];const kind=p.category||(['coffee','suco'].includes(p.id)?'Bebida':['pao_queijo','cookie'].includes(p.id)?'Salgado':'Doce');
+      const answers=[{label:'Farinha e massa',kind:'Salgado'},{label:'Leite e bebida',kind:'Bebida'},{label:'Chocolate e confeitaria',kind:'Doce'}];
+      if(!['Doce','Salgado','Bebida'].includes(kind))answers.push({label:'Ingredientes variados',kind:'Outro'});
+      showOverlay(`<div class="shop-dialog"><div class="eyebrow">COZINHA · DESAFIO RAPIDO</div><h2>Prepare ${esc(p.name)}</h2><p>Qual grupo de ingredientes combina melhor com este pedido?</p><div class="shop-answer-list">${answers.map(a=>`<button data-action="shop-recipe" data-kind="${a.kind}" data-target="${kind}">${a.label} →</button>`).join('')}</div><button class="btn btn-secondary" data-action="close">Voltar</button><p class="game-disclaimer">Treino educativo: os insumos reais continuam a ser descontados somente no fechamento.</p></div>`);
+      return;
+    }
+    if(type==='decor'){
+      showOverlay(`<div class="shop-dialog"><div class="eyebrow">PERSONALIZE SEU ESPACO</div><h2>Decoracao da loja</h2><p>Compre melhorias permanentes, ou reorganize os moveis gratuitamente.</p><div class="shop-products">${DECOR_ITEMS.map(d=>`<div><span>${d.emoji} ${d.name}<small>${d.desc}</small></span><button data-action="buy-decor" data-id="${d.id}" ${state.decor.includes(d.id)||!editableDay()?'disabled':''}>${state.decor.includes(d.id)?'Comprado':money(d.price)}</button></div>`).join('')}</div><button class="btn btn-secondary" data-action="change-layout" ${!editableDay()?'disabled':''}>🔄 Mudar posicao dos moveis</button><button class="btn btn-secondary" data-action="close">Fechar</button></div>`);
+      return;
+    }
+    if(type==='zuni')toast(dayConfig().hint);
+  }
+  function quickClose(){
+    if(!state.started){showIntro();return;}
+    if(state.finished){finale();return;}
+    if(state.pendingNext){nextDay();return;}
+    const missing=shortagesValue();const expenses=operationalCost();
+    const canPay=state.cash>=missing+expenses-.03;
+    const note=missing>.02?`<p>Faltam <strong>${money(missing)}</strong> em ingredientes. ${canPay?'A reposicao pode ser feita automaticamente.':'Seu caixa nao cobre tudo; use o ajuste automatico de producao.'}</p>`:'<p>Seu estoque ja cobre a producao planejada.</p>';
+    showOverlay(`<div class="shop-dialog fast-close-dialog"><div class="eyebrow">DIA ${state.day} · FECHAMENTO FACIL</div><h2>Encerrar expediente?</h2><p>Voce pode fechar agora, mesmo sem completar todos os atendimentos opcionais.</p><div class="quick-summary"><div><span>Vendas previstas</span><b>${forecast().sold} un.</b></div><div><span>Saldo atual</span><b>${money(state.cash)}</b></div><div><span>Tarefas atendidas</span><b>${cityProgress().deliveryStep}/3</b></div></div>${note}<p class="game-disclaimer">O jogo usara o mesmo calculo de custos, lucro e estoque do fechamento normal. Nenhuma venda sera registrada em dobro.</p><button class="btn btn-primary" data-action="quick-close-confirm">${missing>.02?(canPay?'Repor e encerrar':'Ajustar producao e encerrar'):'Encerrar e ver resultado'}</button><button class="btn btn-secondary" data-action="close">Continuar administrando</button></div>`);
+  }
+  function quickCloseConfirm(){
+    if(!editableDay())return;
+    let missing=shortagesValue();const expenses=operationalCost();
+    if(missing+expenses>state.cash+.02){
+      // Diminui a producao planejada ate que ingredientes + operacao caibam no caixa.
+      let attempts=0;
+      while(shortagesValue()+operationalCost()>state.cash+.02&&attempts<5000){
+        const choices=activeIndexes().filter(k=>state.quantities[k]>0);
+        if(!choices.length)break;
+        const biggest=choices.reduce((a,b)=>state.quantities[a]*productCost(a)>=state.quantities[b]*productCost(b)?a:b);
+        state.quantities[biggest]--;attempts++;
+      }
+      missing=shortagesValue();
+    }
+    if(missing+operationalCost()>state.cash+.02){
+      hideOverlay();toast('Ainda faltam recursos para as despesas fixas. Altere a estrategia em Meu negocio.');return;
+    }
+    if(missing>.02){
+      const items=shortages();const total=items.reduce((a,x)=>a+Math.ceil(x.missing*100)/100,0);
+      if(total+operationalCost()>state.cash+.02){hideOverlay();toast('Orcamento insuficiente para a reposicao. Reduza a producao.');return;}
+      items.forEach(x=>state.inventory[x.id]=Math.round(((state.inventory[x.id]||0)+Math.ceil(x.missing*100)/100)*100)/100);
+      state.cash=Math.round((state.cash-total)*100)/100;
+    }
+    const opt={label:'Fechamento rapido',cost:0,demand:[1,1,1],rep:0};
+    const out=resultDay(opt,-1);
+    markTutorialTask('close');
+    sound(out.profit>=0?'win':'tap');showResult(out);
+  }
   const root = document.getElementById('pageRoot');
   const overlay = document.getElementById('overlayRoot');
   const toastEl = document.getElementById('toast');
@@ -119,7 +232,7 @@
   let state = loadState();
 
   function defaultState() {
-    return { started:false, name:'Ateliê Aurora', day:1, cash:INITIAL_CASH, reputation:62, prices:PRODUCTS.slice(0,BASE_PRODUCTS_COUNT).map(p=>p.defaultPrice), quantities:PRODUCTS.slice(0,BASE_PRODUCTS_COUNT).map(p=>p.unlockCost?0:p.defaultQty), customProducts:[], unlocked:[...ORIGINAL_IDS], upgrades:[], investments:[], policy:'none', history:[], pendingNext:false, finished:false, selectedChallenge:null, tutorialSeen:false, inventory:{chocolate:0,farinha:0,leite:0,embalagem:0,outros:0}, employees:[], secondUnit:false, period:'tarde', missionWins:0, city:{day:1,supplier:null,priceDone:false,priceCorrect:false,deliveryDone:false,deliveryStep:0} };
+    return { started:false, name:'Ateliê Aurora', day:1, cash:INITIAL_CASH, reputation:62, prices:PRODUCTS.slice(0,BASE_PRODUCTS_COUNT).map(p=>p.defaultPrice), quantities:PRODUCTS.slice(0,BASE_PRODUCTS_COUNT).map(p=>p.unlockCost?0:p.defaultQty), customProducts:[], unlocked:[...ORIGINAL_IDS], upgrades:[], investments:[], policy:'none', history:[], pendingNext:false, finished:false, selectedChallenge:null, tutorialSeen:false, tutorialTasks:{}, decor:[], layout:0, inventory:{chocolate:0,farinha:0,leite:0,embalagem:0,outros:0}, employees:[], secondUnit:false, period:'tarde', missionWins:0, city:{day:1,supplier:null,priceDone:false,priceCorrect:false,deliveryDone:false,deliveryStep:0} };
   }
   function sanitizeCustomProduct(raw){
     if(!raw || typeof raw!=='object')return null;
@@ -218,6 +331,13 @@
       s.inventory=Object.fromEntries(INGREDIENTS.map(x=>[x.id,Math.max(0,Number(raw.inventory?.[x.id])||0)]));
       s.employees=Array.isArray(raw.employees)?[...new Set(raw.employees.filter(id=>STAFF.some(v=>v.id===id)))]:[];
       s.secondUnit=Boolean(raw.secondUnit);
+      s.decor=Array.isArray(raw.decor)?[...new Set(raw.decor.filter(id=>DECOR_ITEMS.some(d=>d.id===id)))]:[];
+      s.layout=clamp(Math.floor(Number(raw.layout)||0),0,2);
+      s.tutorialTasks=raw.tutorialTasks&&typeof raw.tutorialTasks==='object'?Object.fromEntries(TUTORIAL_MISSIONS.map(t=>[t.id,Boolean(raw.tutorialTasks[t.id])])):{};
+      s.city={...fresh.city,...(raw.city&&typeof raw.city==='object'?raw.city:{})};
+      s.city.satisfaction=clamp(Math.round(Number(s.city.satisfaction)||0),0,12);
+      s.city.prepared=Boolean(s.city.prepared);
+      s.city.reactions=Array.isArray(s.city.reactions)?s.city.reactions.slice(0,3):[];
       s.period=['manha','tarde','noite'].includes(raw.period)?raw.period:'tarde';
       s.missionWins=Math.max(0,Number(raw.missionWins)||0);
       s.prices=PRODUCTS.map((p,i)=>clamp(Number(s.prices[i]) || p.defaultPrice,1,100));
@@ -318,7 +438,7 @@
     const p=PRODUCTS[i], day=dayConfig();
     const pricing=clamp(Math.pow(p.market/Math.max(1,price),1.8),.32,2.05);
     const reputation=clamp(.6+(rep/100)*.65,.62,1.27);
-    return Math.max(0,p.baseDemand*(day.demand[i]??1)*policy().multiplier*pricing*reputation*(opt?.demand?.[i]||1)*cityModifiers().demand*(ownedUpgrade('vitrine')?1.08:1)*(ownedUpgrade('fidelidade')?1.10:1)*(staffOwned('atendente')?1.12:1)*(state.secondUnit?1.46:1)*todayEvent().demand*periodDemand(i)*personaDemand(i,price));
+    return Math.max(0,p.baseDemand*(day.demand[i]??1)*policy().multiplier*pricing*reputation*(opt?.demand?.[i]||1)*cityModifiers().demand*(ownedUpgrade('vitrine')?1.08:1)*(ownedUpgrade('fidelidade')?1.10:1)*(staffOwned('atendente')?1.12:1)*(state.secondUnit?1.46:1)*todayEvent().demand*periodDemand(i)*personaDemand(i,price)*(1+(state.decor?.length||0)*.018)*(1+Math.min(.06,(cityProgress().satisfaction||0)*.012))*(cityProgress().prepared?1.025:1));
   }
   function forecast(opt){
     const lines=activeIndexes().map(i=>{
@@ -353,7 +473,7 @@
     const compared=lines.reduce((v,p)=>v+(p.price/PRODUCTS[p.productIndex].market)*(p.sold||1),0)/Math.max(1,lines.reduce((v,p)=>v+(p.sold||1),0));
     const baseReputation=(compared<.97?1:compared>1.16?-3:0)+(saleRatio>.78?1:saleRatio<.39?-2:0);
     const missionComplete=sold>=missionInfo().goal;
-    const repChange=policy().rep+(opt.rep||0)+baseReputation+(staffOwned('gerente')?2:0)+(missionComplete?2:0);
+    const repChange=policy().rep+(opt.rep||0)+baseReputation+(staffOwned('gerente')?2:0)+(missionComplete?2:0)+(cityProgress().satisfaction>=4?1:0);
     const reputationBefore=state.reputation;
     // Ingredients were paid for when stocked. Opening the store consumes those assets,
     // so we only deduct operating expenses at closing: do not pay production twice.
@@ -362,7 +482,7 @@
     state.cash=Math.round((state.cash+revenue-fees-fixed-policyCost-challengeCost)*100)/100;
     if(missionComplete)state.missionWins++;
     state.reputation=clamp(state.reputation+repChange,0,100);
-    const result={day:state.day, title:dayConfig().title, lines, revenue,directCost,fees,fixed,policyCost,challengeCost,profit,sold,made,remaining:made-sold,repChange,reputationBefore,reputationAfter:state.reputation, cashAfter:state.cash, optionIndex, optionLabel:opt.label, missionComplete, inventoryAfter:inventoryValue(), salaries:salaryCost(), rent:branchRent(), customerProfile:customerType().name, timeSlot:periodLabel(), secondUnit:state.secondUnit, citySummary:{supplier:CITY_SUPPLIERS.find(s=>s.id===cityProgress().supplier)?.name||'Não selecionado',priceDone:cityProgress().priceDone,priceCorrect:cityProgress().priceCorrect,deliveryDone:cityProgress().deliveryDone}};
+    const result={day:state.day, title:dayConfig().title, lines, revenue,directCost,fees,fixed,policyCost,challengeCost,profit,sold,made,remaining:made-sold,repChange,reputationBefore,reputationAfter:state.reputation, cashAfter:state.cash, optionIndex, optionLabel:opt.label, missionComplete, inventoryAfter:inventoryValue(), salaries:salaryCost(), rent:branchRent(), customerProfile:customerType().name, customerSatisfaction:cityProgress().satisfaction||0, customerReactions:cityProgress().reactions||[], decor:state.decor.slice(), timeSlot:periodLabel(), secondUnit:state.secondUnit, citySummary:{supplier:CITY_SUPPLIERS.find(s=>s.id===cityProgress().supplier)?.name||'Não selecionado',priceDone:cityProgress().priceDone,priceCorrect:cityProgress().priceCorrect,deliveryDone:cityProgress().deliveryDone}};
     state.history.push(result);
     state.pendingNext=true;
     state.period='noite';
@@ -605,11 +725,27 @@
   }
 
   function pageInterior(){
-    const period=state.period,products=activeIndexes().slice(0,6),f=forecast();
-    root.innerHTML=heading(`${i('box')} LOJA INTERATIVA`,'Dentro da loja','Organize a operação, confira sua vitrine e escolha o horário de maior movimento antes de abrir.',`DIA ${state.day} · ${periodLabel().toUpperCase()}`)+
-      `<div class="period-select">${[['manha','🌅 Manhã'],['tarde','🌇 Tarde'],['noite','🌙 Noite']].map(([id,t])=>`<button class="${period===id?'active':''}" data-action="set-period" data-period="${id}" ${!editableDay()?'disabled':''}>${t}</button>`).join('')}</div>
-      <section class="interior-stage period-${period}"><div class="interior-ceiling"><span>★</span><strong>${esc(state.name.toUpperCase())}</strong><span>★</span></div><div class="interior-window"><span>${period==='noite'?'🌙':period==='manha'?'☀️':'🌇'}</span></div><div class="interior-shelf">${products.map(i=>`<button data-action="inspect-product" data-id="${i}" title="${esc(PRODUCTS[i].name)}"><span class="interior-product-emoji">${PRODUCTS[i].category==='Bebida'||PRODUCTS[i].id==='coffee'?'☕':PRODUCTS[i].category==='Salgado'?'🥐':'🍰'}</span><small>${esc(PRODUCTS[i].name)}</small></button>`).join('')||'<span>Adicione produtos ao cardápio!</span>'}</div><div class="interior-counter"><div class="interior-register">▣</div><span>BALCÃO DE ATENDIMENTO</span></div><div class="interior-worker">${staffOwned('atendente')?'🧑‍💼':'🧾'}</div><div class="interior-floor"></div></section>
-      <div class="feature-grid interior-actions"><article class="feature-card"><h3>📦 Conferir estoque</h3><p>O estoque compartilhado precisa cobrir todos os produtos que serão fabricados.</p><button class="btn btn-secondary" data-action="goto-stock">Ver ingredientes →</button></article><article class="feature-card"><h3>👥 Organizar a equipe</h3><p>Atendentes, cozinheiros e gerentes ajudam a melhorar a operação.</p><button class="btn btn-secondary" data-action="goto-staff">Ver funcionários →</button></article><article class="feature-card"><h3>💰 Abrir a loja</h3><p>Lucro estimado para o período ${periodLabel().toLowerCase()}: <b>${money(f.profit)}</b>.</p><button class="btn btn-primary" data-action="goto-game">Planejar vendas →</button></article></div>`;
+    markTutorialTask('visit');
+    const period=state.period,products=activeIndexes().slice(0,6),f=forecast(),layout=state.layout||0;
+    const fixtures=DECOR_ITEMS.filter(d=>state.decor.includes(d.id));
+    root.innerHTML=heading(`${i('box')} LOJA INTERATIVA`,'Dentro da loja','Clique nos moveis e objetos para administrar o atendimento, a cozinha, os produtos e a decoracao.',`DIA ${state.day} · ${periodLabel().toUpperCase()}`)+
+      `<div class="shop-toolbar"><div class="period-select">${[['manha','🌅 Manha'],['tarde','🌇 Tarde'],['noite','🌙 Noite']].map(([id,t])=>`<button class="${period===id?'active':''}" data-action="set-period" data-period="${id}" ${!editableDay()?'disabled':''}>${t}</button>`).join('')}</div><button class="btn btn-secondary" data-action="change-layout" ${!editableDay()?'disabled':''}>🔄 Organizar moveis</button></div>
+      <section class="interactive-shop period-${period} shop-layout-${layout}" aria-label="Interior interativo da sua loja">
+        <div class="shop-sky"><span>${period==='noite'?'🌙':period==='manha'?'☀️':'🌇'}</span><small>Dia ${state.day}</small></div>
+        <div class="shop-sign"><span>✦</span>${esc(state.name)}<span>✦</span></div>
+        <div class="shop-wall"></div><div class="shop-wallstripe"></div>
+        <button class="shop-object object-shelf" data-action="shop-object" data-type="shelf" title="Abrir vitrine"><span class="shop-sprite">🍰 🍪 ☕</span><b>VITRINE</b><small>${products.length} produtos</small></button>
+        <button class="shop-object object-kitchen" data-action="shop-object" data-type="kitchen" title="Preparar pedido"><span class="shop-sprite">👩‍🍳</span><b>COZINHA</b><small>Minijogo</small></button>
+        <button class="shop-object object-counter" data-action="shop-object" data-type="counter" title="Atender clientes"><span class="shop-sprite">🛎️</span><b>BALCAO</b><small>${cityProgress().deliveryStep}/3 pedidos</small></button>
+        <button class="shop-object object-register" data-action="shop-object" data-type="register" title="Fechar o caixa"><span class="shop-sprite">💳</span><b>CAIXA</b><small>Fechar dia</small></button>
+        <button class="shop-object object-storage" data-action="shop-object" data-type="storage" title="Abrir estoque"><span class="shop-sprite">📦</span><b>ESTOQUE</b><small>Ingredientes</small></button>
+        <button class="shop-object object-decor" data-action="shop-object" data-type="decor" title="Decoracao"><span class="shop-sprite">${fixtures.map(d=>d.emoji).join(' ')||'🪴'}</span><b>DECORACAO</b><small>${fixtures.length}/3 melhorias</small></button>
+        <button class="shop-object object-door" data-action="shop-object" data-type="door" title="Encerrar expediente"><span class="shop-sprite">🚪</span><b>PORTA</b><small>Fechar loja</small></button>
+        <div class="shop-floor"></div><div class="shop-person" aria-hidden="true">${staffOwned('atendente')?'🧑‍💼':'👩‍💼'}</div><div class="shop-visitors" aria-hidden="true">${clientForStep(0).avatar} ${clientForStep(1).avatar}</div>
+      </section>
+      <div class="shop-helper">✨ <strong>ZUNI:</strong> toque no balcao para atender, na cozinha para preparar um pedido, ou no caixa para encerrar o dia. Organizar os moveis nao custa nada.</div>
+      <section class="shop-bottom-grid"><article class="shop-mini-card"><small>PREVISAO DE LUCRO</small><strong>${money(f.profit)}</strong><span>${f.sold} unidades previstas</span></article><article class="shop-mini-card"><small>CLIENTES ATENDIDOS</small><strong>${cityProgress().deliveryStep}/3</strong><span>Atendimento opcional</span></article><article class="shop-mini-card"><small>DECORACAO</small><strong>${state.decor.length}/3</strong><span>Melhorias permanentes</span></article></section>
+      <div class="shop-action-row"><button class="btn btn-primary" data-action="quick-close">🌙 Encerrar expediente agora</button><button class="btn btn-secondary" data-action="goto-game">⚙️ Definir precos e producao</button><button class="btn btn-secondary" data-action="goto-stock">📦 Repor estoque</button></div>${tutorialMissionPanel()}`;
   }
 
   function pageEvents(){
@@ -636,9 +772,9 @@
     }).join('');
     const orderPhase=ended?`<div class="sales-finished"><div class="sales-state-symbol">${i('clock')}</div><h3>Atendimento encerrado hoje</h3><p>O movimento deste dia já foi calculado. Confira os resultados ou avance para receber uma nova fila de clientes.</p><button class="btn btn-secondary" data-action="report">Ver resultados ${i('arrow')}</button></div>`:
       customerDone?`<div class="sales-finished is-success"><div class="sales-state-symbol">${i('check')}</div><h3>Fila atendida!</h3><p>Você preparou os 3 pedidos. A procura prevista aumentou em <b>10%</b> para o dia atual, sem descontar dinheiro antes das vendas.</p><button class="btn btn-primary" data-action="goto-game">Planejar abertura ${i('arrow')}</button></div>`:
-      `<div class="sales-serving"><div class="sales-order-ticket"><span class="sales-ticket-label">PEDIDO ${cp.deliveryStep+1} / 3 · BALCÃO</span><div class="sales-customer-row"><div class="sales-customer-character">${humanSvg(['#d7a7eb','#a0cabe','#edc38a'][cp.deliveryStep],['#e4aa89','#b87f6b','#e9c2a2'][cp.deliveryStep], '#39304b')}</div><div><span>CLIENTE ${cp.deliveryStep+1}</span><h3>“Quero ${PRODUCTS[order].name.toLowerCase()}, por favor!”</h3><p>Escolha o produto correto e registre o pedido.</p></div></div></div><div class="sales-order-choices">${PRODUCTS.map((p,k)=>!isUnlocked(p.id)?'':`<button type="button" class="sales-item-choice" data-action="serve-customer" data-index="${k}"><span class="sales-item-visual">${illustration(k)}</span><strong>${p.name}</strong><span>${money(state.prices[k])}</span></button>`).join('')}</div><div class="sales-queue-bottom"><div class="sales-queue-progress">${[0,1,2].map(k=>`<span class="${k<cp.deliveryStep?'complete':''}"></span>`).join('')}</div><span>${cp.deliveryStep} de 3 atendidos</span></div><div class="sales-feedback" id="salesFeedback" role="status" aria-live="polite">${!available?'Atenção: ajuste a produção desse item em Meu negócio para incluir estoque no planejamento.':''}</div></div>`;
+      `<div class="sales-serving"><div class="sales-order-ticket"><span class="sales-ticket-label">PEDIDO ${cp.deliveryStep+1} / 3 · BALCÃO</span><div class="sales-customer-row"><div class="sales-customer-character">${humanSvg(clientForStep().shirt,clientForStep().skin, clientForStep().hair)}</div><div><span>${clientForStep().avatar} ${clientForStep().name.toUpperCase()} · ${esc(clientForStep().style)}</span><h3>“Quero ${PRODUCTS[order].name.toLowerCase()}, por favor!”</h3><p>“${esc(clientForStep().intro)}”</p><button class="client-small-tip" data-action="client-tip">💬 Conversar sobre a preferencia</button></div></div></div><div class="sales-order-choices">${PRODUCTS.map((p,k)=>!isUnlocked(p.id)?'':`<button type="button" class="sales-item-choice" data-action="serve-customer" data-index="${k}"><span class="sales-item-visual">${illustration(k)}</span><strong>${p.name}</strong><span>${money(state.prices[k])}</span></button>`).join('')}</div><div class="sales-queue-bottom"><div class="sales-queue-progress">${[0,1,2].map(k=>`<span class="${k<cp.deliveryStep?'complete':''}"></span>`).join('')}</div><span>${cp.deliveryStep} de 3 atendidos · Satisfacao ${cp.satisfaction||0} ⭐</span></div><div class="sales-feedback" id="salesFeedback" role="status" aria-live="polite">${!available?'Atenção: ajuste a produção desse item em Meu negócio para incluir estoque no planejamento.':(cp.reactions?.at(-1)||'')}</div></div>`;
     root.innerHTML=heading(`${i('people')} COMÉRCIO EM MOVIMENTO`,'Vendas e clientes','Prepare pedidos, conheça sua clientela e acompanhe como preços e produção afetam a demanda.',`DIA ${state.day}`)+
-      `<section class="sales-kpis"><div><span>Clientes atendidos hoje</span><b>${cp.deliveryStep}<small> / 3</small></b><p>Atendimento interativo</p></div><div><span>Demanda prevista</span><b>${forecastNow.sold}<small> un.</small></b><p>Limitada ao estoque</p></div><div><span>Receita estimada hoje</span><b>${shortMoney(forecastNow.revenue)}</b><p>Antes das taxas e custos</p></div><div><span>Vendas realizadas</span><b>${soldAll}<small> un.</small></b><p>${history.length} dia(s) fechados</p></div></section>
+      `<div class="sales-fast-row"><button class="btn btn-secondary" data-action="shop-back">🏪 Voltar ao interior</button><button class="btn btn-primary" data-action="quick-close">🌙 Encerrar expediente</button></div><section class="sales-kpis"><div><span>Clientes atendidos hoje</span><b>${cp.deliveryStep}<small> / 3</small></b><p>Atendimento interativo</p></div><div><span>Demanda prevista</span><b>${forecastNow.sold}<small> un.</small></b><p>Limitada ao estoque</p></div><div><span>Receita estimada hoje</span><b>${shortMoney(forecastNow.revenue)}</b><p>Antes das taxas e custos</p></div><div><span>Vendas realizadas</span><b>${soldAll}<small> un.</small></b><p>${history.length} dia(s) fechados</p></div></section>
       <section class="client-profile"><div class="client-face">${customerType().emoji}</div><div><span class="small-label">CLIENTELA DO DIA · ${customerType().kind.toUpperCase()}</span><h3>${customerType().name}</h3><p>${customerType().summary} “${customerType().quote}”</p></div></section><section class="sales-layout"><div class="sales-counter"><div class="sales-section-label"><span>${i('people')} ATENDIMENTO SIMULADO</span><span class="sales-mini-pill">${ended?'DIA ENCERRADO':customerDone?'CONCLUÍDO':'FILA ATIVA'}</span></div><h2>Pedidos no balcão</h2><p class="sales-panel-desc">Acertar os três pedidos melhora a confiança e aumenta a <b>procura estimada em 10%</b> no dia. As vendas de verdade são contabilizadas ao abrir a loja.</p>${orderPhase}</div>
       <aside class="sales-side"><div class="sales-side-box"><div class="sales-section-label">${i('chart')} PROJEÇÃO DE DEMANDA</div><h3>O que os clientes procuram?</h3>${salesRows}<p class="sales-legal">Previsões fictícias, recalculadas conforme preço, produção, reputação e escolhas do dia.</p></div><div class="sales-side-box sales-summary"><div class="sales-section-label">${i('wallet')} VENDAS FECHADAS</div><h3>${latest?'Último balanço: dia '+latest.day:'Aguardando primeira abertura'}</h3><div class="sales-summary-row"><span>Receita total já registrada</span><b>${money(turnover)}</b></div><div class="sales-summary-row"><span>Último dia: unidades vendidas</span><b>${latest?latest.sold:0}</b></div><div class="sales-summary-row"><span>Último dia: lucro</span><b class="${latest&&latest.profit<0?'is-negative':'is-positive'}">${money(latest?.profit||0)}</b></div><button class="btn btn-secondary" data-action="report">Abrir histórico ${i('arrow')}</button></div></aside></section>`;
   }
@@ -672,7 +808,7 @@
   }
   function pageHelp(){
     root.innerHTML=heading(`${i('help')} APRENDIZADO PRÁTICO`,'Como jogar','Explore o bairro, atenda clientes na aba Vendas e clientes, abra a loja e acompanhe uma simulação contínua de precificação, custos e margem de contribuição.','TUTORIAL')+
-    `<div class="help-actions"><button class="btn btn-primary" data-action="tutorial">${i('play')} Iniciar tutorial completo (18 etapas)</button></div>
+    `${tutorialMissionPanel()}<div class="help-actions"><button class="btn btn-primary" data-action="tutorial">${i('play')} Iniciar tutorial guiado (${TOUR_STEPS.length} etapas)</button></div>
     <div class="help-grid"><div class="help-card"><div class="help-count">01 / EXPLORE</div><h3>Visite as lojas do bairro</h3><p>No mapa, clique nas fachadas para negociar com fornecedores, resolver o desafio de preço e consultar a Zuni.</p></div><div class="help-card"><div class="help-count">02 / PLANEJE</div><h3>Defina preços e produção</h3><p>Cadastre itens seus em Expansão e ajuste quanto cobrar e quantas unidades produzir em Meu negócio. Produtos não vendidos representam desperdício.</p></div><div class="help-card"><div class="help-count">03 / ESCOLHA</div><h3>Planeje sua estratégia</h3><p>Você pode operar com custo menor, investir em divulgação ou melhorar a experiência do cliente. Cada caminho tem vantagens e custos.</p></div><div class="help-card"><div class="help-count">04 / REAJA</div><h3>Resolva imprevistos</h3><p>Ao abrir a loja, surge uma decisão de gestão. Compare o custo da ação e os possíveis efeitos sobre a procura.</p></div><div class="help-card wide"><div class="help-count">05 / CRESÇA</div><h3>Expanda o cardápio e a estrutura</h3><p>Na página Expansão do negócio, cadastre seus próprios produtos com nome, categoria, custo, preço e quantidade. Eles aparecem em Meu negócio, no atendimento de clientes, no Mercado e nos resultados. Também é possível editar ou retirar um item sem apagar o histórico de vendas. As melhorias e os produtos prontos opcionais têm investimentos separados do lucro diário.</p></div><div class="help-card"><div class="help-count">06 / REPONHA</div><h3>Compre ingredientes</h3><p>Depois de definir a produção, abra Estoque e compre as porções necessárias. Essa compra reduz o caixa agora; o custo do material consumido entra no lucro apenas quando a loja fecha.</p></div><div class="help-card"><div class="help-count">07 / GERENCIE</div><h3>Equipe, horário e unidades</h3><p>Escolha manhã, tarde ou noite no Interior, contrate funcionários se couber no orçamento e avalie abrir a unidade Centro. Mais demanda também pode trazer salários e aluguel.</p></div><div class="help-card wide"><div class="help-count">CONCEITO DO TCC ZUZ</div><h3>Como a precificação é calculada?</h3><p>A ZUZ considera custos diretos, rateio de custos fixos, tributos e taxas e margem desejada. Neste jogo, a fórmula de referência (margem de 20%, taxas de 8%) é:</p><div class="formula">Preço técnico = (Custo unitário + Custo fixo rateado) ÷ (1 − 0,08 − 0,20)</div><p>A margem de contribuição por unidade é o preço de venda menos custos variáveis e taxas. O ponto de equilíbrio é a quantidade de vendas necessária para cobrir as despesas fixas, considerando essa margem.</p></div><div class="help-card wide"><div class="help-count">SOBRE A SIMULAÇÃO</div><h3>Regras e limitações</h3><p>Você começa com ${money(INITIAL_CASH)}, reputação 62/100 e administra a loja por tempo indeterminado, em ciclos de cenário. A demanda depende do preço relativo ao mercado simulado, reputação, eventos e estratégia. Cada produto tem custo direto e cada dia possui despesas fixas; as vendas têm 8% de taxas.</p><p>A personagem Zuni apresenta dicas programadas offline neste jogo; não é uma conexão com a IA Gemini do sistema principal.</p></div></div>`;
   }
   /* Bairro ZUZ — camada de missões interativas ligada ao simulador financeiro. */
@@ -683,7 +819,7 @@
   ];
   const PACKING_ORDERS = [0,1,2,2,0,1,1,2,0,0,2,1,2,1,0,1,0,2,0,2,1,2,0,1];
   function cityProgress(){
-    if(!state.city || state.city.day!==state.day){state.city={day:state.day,supplier:null,priceDone:false,priceCorrect:false,deliveryDone:false,deliveryStep:0};save();}
+    if(!state.city || state.city.day!==state.day){state.city={day:state.day,supplier:null,priceDone:false,priceCorrect:false,deliveryDone:false,deliveryStep:0,satisfaction:0,prepared:false,reactions:[]};save();}
     return state.city;
   }
   function cityModifiers(){
@@ -762,6 +898,7 @@
 
   function render(){
     renderSide();
+    const quick=document.getElementById('fastDaySlot');if(quick)quick.innerHTML=fastDayControl();
     if(currentPage==='cidade') pageCity();
     else if(currentPage==='vendas') pageSales();
     else if(currentPage==='expansao') pageExpansion();
@@ -794,6 +931,8 @@ const TOUR_STEPS = [
     {page:'gestao', title:'Planeje os preços e a produção', instruction:'Em Meu negócio, mude o preço de venda e os botões de quantidade de cada produto. Compare o preço técnico com o valor do mercado.', why:'O caixa, os custos fixos, a margem de contribuição, as taxas e a projeção mudam conforme suas escolhas.'},
     {page:'gestao', title:'Compare cenários de preços', instruction:'Toque em “Comparar cenários”. Teste um preço acessível, um preço intermediário e um preço maior antes de tomar sua decisão.', why:'Não existe preço perfeito para todos os casos: o volume vendido também reage ao preço e à reputação.'},
     {page:'interior', title:'Entre na loja e escolha o turno', instruction:'Em Interior da loja, veja a vitrine, toque nos produtos e escolha Manhã, Tarde ou Noite.', why:'A iluminação do cenário e o interesse dos clientes mudam de acordo com o período escolhido.'},
+    {page:'interior', title:'Clique nos objetos da loja', instruction:'Clique na Vitrine, Cozinha ou Balcao para interagir. Os objetos usam os mesmos produtos, estoques e precos da gestao.', why:'Interacoes visuais permitem aprender fazendo, sem repetir vendas ou custos.'},
+    {page:'interior', title:'Personalize o ambiente', instruction:'Use Organizar moveis para mudar o layout; compre plantas e outros moveis na Decoracao quando tiver dinheiro.', why:'Investimentos reduzem o caixa uma vez e ficam registrados no historico.'},
     {page:'estoque', title:'Compre os ingredientes', instruction:'Depois de escolher o volume de produção, entre em Estoque de insumos e toque em “Repor plano” para comprar o necessário.', why:'Chocolate, farinha, leite e embalagens são consumidos na produção. A compra reduz o caixa, mas não é cobrada duas vezes no fechamento.'},
     {page:'funcionarios', title:'Monte sua equipe', instruction:'Confira as funções disponíveis e contrate somente se o caixa comportar o custo. Você também pode dispensar um funcionário.', why:'Atendentes, cozinheiros e gerentes ajudam na operação, mas aumentam a folha de salários todos os dias.'},
     {page:'vendas', title:'Atenda os clientes', instruction:'Em Vendas e clientes, leia o pedido mostrado no balcão e escolha o produto correspondente. Atenda os três pedidos.', why:'A conclusão do atendimento aumenta a procura prevista. As vendas definitivas só acontecem ao abrir a loja.'},
@@ -803,6 +942,7 @@ const TOUR_STEPS = [
     {page:'expansao', title:'Melhore e expanda a empresa', instruction:'Em Expansão do negócio, compre melhorias e desbloqueie produtos prontos quando tiver dinheiro suficiente. Criar produtos próprios também é possível.', why:'Diferencie gasto de investimento e monitore se a expansão está compensando.'},
     {page:'unidades', title:'Abra a segunda unidade', instruction:'Confira o investimento necessário para abrir a loja do Centro. Avalie também o aluguel adicional antes de confirmar.', why:'A segunda unidade aumenta a procura potencial, mas compartilha a produção e o estoque com a matriz nesta versão.'},
     {page:'gestao', title:'Abra a loja e feche o caixa', instruction:'Volte a Meu negócio, confirme que há insumos e dinheiro suficientes, toque em “Abrir a loja” e escolha como reagir ao imprevisto.', why:'O balanço mostra receita, custos da produção, taxas, salários, aluguel, lucro e sobras. Depois você avança para outro dia, sem limite.'},
+    {page:'interior', title:'Feche o expediente em um clique', instruction:'Use Encerrar expediente em Interior ou no botao superior. O jogo repoe os ingredientes necessarios quando ha caixa; caso contrario, ajusta a producao.', why:'O fechamento rapido calcula custos e lucros com as mesmas regras do fechamento tradicional.'},
     {page:'historico', title:'Interprete o resultado e continue', instruction:'Acompanhe o gráfico de lucro, vendas, investimentos e histórico financeiro. Use os dados para melhorar a estratégia no próximo dia.', why:'O jogo salva automaticamente no dispositivo. Para reabrir este guia, toque em Como jogar ou Ajuda no menu mobile.'}
   ];
   let tourStep=0;
@@ -857,8 +997,7 @@ const TOUR_STEPS = [
     const challenge=currentChallenge();
     const buttons=challenge.options.map((o,j)=>`<button class="challenge-choice" data-action="choose-challenge" data-choice="${j}"><div class="challenge-choice-icon">${i(j===0?'star':'check')}</div><div><strong>${o.label}</strong><p>${o.detail}</p></div>${i('arrow')}</button>`).join('');
     showOverlay(`<div class="challenge-dialog"><button class="dialog-close" data-action="close" aria-label="Voltar">${i('close')}</button><div class="eyebrow">DIA ${state.day} · DECISÃO DE GESTÃO</div><div class="challenge-big-icon">${i('light')}</div><h2>${challenge.title}</h2><p class="challenge-narrative">${challenge.text}</p><div class="challenge-options">${buttons}</div><p class="game-disclaimer">Sua escolha terá consequências no caixa e/ou na demanda do dia. A nova despesa precisa caber no orçamento.</p></div>`);
-  }
-  function simulate(opt,idx){
+  }  function simulate(opt,idx){
     if(shortagesValue(opt)>.02){toast('Faltam ingredientes para esta decisão. Reponha o estoque no planejamento.');return}
     if(operationalCost(opt)>state.cash){toast('A decisão excede o caixa disponível.');return}
     sound('cash');
@@ -879,7 +1018,7 @@ const TOUR_STEPS = [
     const profitText=positive?'Lucro do dia':'Resultado negativo do dia';
     const percentSold=Math.round((r.sold/Math.max(1,r.made))*100);
     const nextText=state.finished?'Ver balanço final':'Avançar para o próximo dia';
-    showOverlay(`<div class="result-dialog"><div class="result-top"><div class="result-icon">${i(positive?'check':'info')}</div><div class="eyebrow" style="justify-content:center">BALANÇO · DIA ${r.day}</div><h2>${positive?'Sua loja fechou no positivo!':'Hora de rever a estratégia.'}</h2><p>O dinheiro no caixa é consequência das suas decisões de preço, produção e atendimento.</p><div class="result-profit ${positive?'is-positive':'is-negative'}">${money(r.profit)}</div><span class="pill ${positive?'pill--green':'pill--amber'}">${profitText}</span></div><div class="result-stats"><div class="result-stat"><small>Receita de vendas</small><b>${money(r.revenue)}</b></div><div class="result-stat"><small>Produtos vendidos</small><b>${r.sold} de ${r.made} (${percentSold}%)</b></div><div class="result-stat"><small>Caixa disponível</small><b>${money(r.cashAfter)}</b></div></div><table class="result-table"><thead><tr><th>Produto</th><th>Vendidos</th><th>Sobras</th><th>Receita</th></tr></thead><tbody>${r.lines.map(l=>`<tr><td>${l.name}</td><td>${l.sold}/${l.made}</td><td>${l.remaining}</td><td>${money(l.revenue)}</td></tr>`).join('')}</tbody></table><div class="result-breakdown"><div><span>Produção (consumo do estoque)</span><strong>− ${money(r.directCost)}</strong></div><div><span>Despesas fixas, salários e aluguéis</span><strong>− ${money(r.fixed)}</strong></div><div><span>Taxas de venda</span><strong>− ${money(r.fees)}</strong></div><div><span>Estratégia e imprevisto</span><strong>− ${money(r.policyCost+r.challengeCost)}</strong></div><div><span>Meta do dia</span><strong>${r.missionComplete?'Concluída (+2 rep.)':'Não atingida'}</strong></div><div><span>Reputação</span><strong class="${r.repChange>=0?'is-positive':'is-negative'}">${r.repChange>0?'+':''}${r.repChange} pontos</strong></div></div>${r.citySummary?`<div class="city-mission-tip"><b>Decisões tomadas no bairro:</b> Fornecedor: ${esc(r.citySummary.supplier)} · Desafio de preço: ${r.citySummary.priceCorrect?'correto (+3 reputação)':r.citySummary.priceDone?'realizado':'não realizado'} · Atendimento: ${r.citySummary.deliveryDone?'concluído (+10% de procura)':'não realizado'}.</div>`:''}<p class="game-disclaimer">Estoque restante após a produção: ${money(r.inventoryAfter||0)} em insumos. Compras de estoque já pagas não são descontadas do caixa outra vez no fechamento.</p><div class="result-foot"><span>${r.remaining>0?`Você teve ${r.remaining} unidade(s) sem vender. Produza com atenção à demanda.`:'Sua produção foi totalmente vendida! Confira se perdeu demanda por falta de estoque.'}</span><button type="button" class="btn btn-primary" data-action="next">${nextText} ${i('arrow')}</button></div></div>`);
+    showOverlay(`<div class="result-dialog"><div class="result-top"><div class="result-icon">${i(positive?'check':'info')}</div><div class="eyebrow" style="justify-content:center">BALANÇO · DIA ${r.day}</div><h2>${positive?'Sua loja fechou no positivo!':'Hora de rever a estratégia.'}</h2><p>O dinheiro no caixa é consequência das suas decisões de preço, produção e atendimento.</p><div class="result-profit ${positive?'is-positive':'is-negative'}">${money(r.profit)}</div><span class="pill ${positive?'pill--green':'pill--amber'}">${profitText}</span></div><div class="result-stats"><div class="result-stat"><small>Receita de vendas</small><b>${money(r.revenue)}</b></div><div class="result-stat"><small>Produtos vendidos</small><b>${r.sold} de ${r.made} (${percentSold}%)</b></div><div class="result-stat"><small>Caixa disponível</small><b>${money(r.cashAfter)}</b></div></div><table class="result-table"><thead><tr><th>Produto</th><th>Vendidos</th><th>Sobras</th><th>Receita</th></tr></thead><tbody>${r.lines.map(l=>`<tr><td>${l.name}</td><td>${l.sold}/${l.made}</td><td>${l.remaining}</td><td>${money(l.revenue)}</td></tr>`).join('')}</tbody></table><div class="result-breakdown"><div><span>Produção (consumo do estoque)</span><strong>− ${money(r.directCost)}</strong></div><div><span>Despesas fixas, salários e aluguéis</span><strong>− ${money(r.fixed)}</strong></div><div><span>Taxas de venda</span><strong>− ${money(r.fees)}</strong></div><div><span>Estratégia e imprevisto</span><strong>− ${money(r.policyCost+r.challengeCost)}</strong></div><div><span>Meta do dia</span><strong>${r.missionComplete?'Concluída (+2 rep.)':'Não atingida'}</strong></div><div><span>Reputação</span><strong class="${r.repChange>=0?'is-positive':'is-negative'}">${r.repChange>0?'+':''}${r.repChange} pontos</strong></div></div>${r.customerReactions?.length?`<div class="shop-reviews"><strong>Clientes do dia · Satisfacao ${r.customerSatisfaction||0} ⭐</strong>${r.customerReactions.map(x=>`<p>💬 ${esc(x)}</p>`).join('')}</div>`:''}${r.citySummary?`<div class="city-mission-tip"><b>Decisões tomadas no bairro:</b> Fornecedor: ${esc(r.citySummary.supplier)} · Desafio de preço: ${r.citySummary.priceCorrect?'correto (+3 reputação)':r.citySummary.priceDone?'realizado':'não realizado'} · Atendimento: ${r.citySummary.deliveryDone?'concluído (+10% de procura)':'não realizado'}.</div>`:''}<p class="game-disclaimer">Estoque restante após a produção: ${money(r.inventoryAfter||0)} em insumos. Compras de estoque já pagas não são descontadas do caixa outra vez no fechamento.</p><div class="result-foot"><span>${r.remaining>0?`Você teve ${r.remaining} unidade(s) sem vender. Produza com atenção à demanda.`:'Sua produção foi totalmente vendida! Confira se perdeu demanda por falta de estoque.'}</span><button type="button" class="btn btn-primary" data-action="next">${nextText} ${i('arrow')}</button></div></div>`);
   }
   function finale(){
     state.finished=true;state.pendingNext=false;save();
@@ -892,7 +1031,7 @@ const TOUR_STEPS = [
   function nextDay(){
     if(!state.pendingNext)return;
     if(state.finished){finale();return;}
-    state.pendingNext=false;state.day++;state.policy='none';state.period='tarde';state.city={day:state.day,supplier:null,priceDone:false,priceCorrect:false,deliveryDone:false,deliveryStep:0};
+    state.pendingNext=false;state.day++;state.policy='none';state.period='tarde';state.city={day:state.day,supplier:null,priceDone:false,priceCorrect:false,deliveryDone:false,deliveryStep:0,satisfaction:0,prepared:false,reactions:[]};
     state.quantities=PRODUCTS.map(p=>isUnlocked(p.id)?p.defaultQty:0);
     state.prices=PRODUCTS.map((p,i)=>clamp(Math.round((state.prices[i]*.65+p.defaultPrice*.35)*100)/100,1,100));
     save();currentPage='cidade';hideOverlay();render();window.scrollTo({top:0,behavior:'smooth'});
@@ -917,6 +1056,24 @@ const TOUR_STEPS = [
       if(tourActive&&!tourPaused){tourPaused=true;renderTour();}
       return;
     }
+    if(action==='shop-back'){currentPage='interior';render();return;}
+    if(action==='shop-object'){shopDialog(b.dataset.type);sound('tap');return;}
+    if(action==='buy-decor'){decoratePurchase(b.dataset.id);return;}
+    if(action==='change-layout'){
+      if(!editableDay())return;
+      state.layout=(state.layout+1)%3;markTutorialTask('layout');save();hideOverlay();render();sound('tap');toast('Moveis reorganizados!');return;
+    }
+    if(action==='shop-recipe'){
+      if(!editableDay())return;
+      if(b.dataset.kind===b.dataset.target){cityProgress().prepared=true;markTutorialTask('kitchen');save();hideOverlay();render();sound('win');toast('Pedido preparado! Pequeno bonus na demanda do dia.');}
+      else{toast('Esse ingrediente nao combina com o tipo de produto. Tente outra opcao.');sound('tap');}
+      return;
+    }
+    if(action==='client-tip'){
+      const profile=clientForStep();const note=document.getElementById('salesFeedback');if(note)note.textContent=`${profile.name}: ${profile.intro} Me atende com carinho?`;sound('tap');return;
+    }
+    if(action==='quick-close'){quickClose();return;}
+    if(action==='quick-close-confirm'){quickCloseConfirm();return;}
     if(action==='goto-stock'){currentPage='estoque';render();window.scrollTo(0,0);return}
     if(action==='goto-staff'){currentPage='funcionarios';render();window.scrollTo(0,0);return}
     if(action==='quick-restock'){restockAll();return}
@@ -969,10 +1126,18 @@ const TOUR_STEPS = [
       const expected=todayOrder();
       if(Number(b.dataset.index)!==expected){const note=document.getElementById('salesFeedback');if(note)note.textContent='Pedido diferente! Confira o produto que o cliente pediu e tente novamente.';sound('tap');return;}
       if(state.quantities[expected]<=0){const note=document.getElementById('salesFeedback');if(note)note.textContent='Não há produção planejada desse produto. Aumente a quantidade em Meu negócio antes de preparar o pedido.';sound('tap');return;}
+      const client=clientForStep();
+      const fairPrice=state.prices[expected]<=PRODUCTS[expected].market*1.12;
+      const pleased=client.style==='economico'?fairPrice:client.style==='trabalhadores'?Boolean(staffOwned('atendente')||cityProgress().prepared):true;
+      const points=pleased?2:1;
+      cp.satisfaction=Math.min(12,(cp.satisfaction||0)+points);
+      cp.reactions=Array.isArray(cp.reactions)?cp.reactions:[];
+      cp.reactions.push(`${client.name}: ${pleased?client.thanks:'Obrigado! Vou pensar nos precos da proxima visita.'}`);
+      markTutorialTask('customer');
       cp.deliveryStep++;
       if(cp.deliveryStep>=3)cp.deliveryDone=true;
       save();render();sound(cp.deliveryDone?'win':'cash');
-      toast(cp.deliveryDone?'Pedidos atendidos! Procura prevista +10%':'Pedido registrado. Próximo cliente!');
+      toast(cp.deliveryDone?'Fila atendida! Procura prevista +10%':`${client.name}: ${pleased?client.thanks:'Obrigado pelo atendimento!'} `);
       return;
     }
     if(action==='close'){hideOverlay();sound();return}
